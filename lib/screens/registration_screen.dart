@@ -1,33 +1,25 @@
 // ignore_for_file: prefer_const_constructors
+import 'package:flash_chat/components/progress_loader.dart';
+import 'package:flash_chat/screens/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
 // ignore: import_of_legacy_library_into_null_safe
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'chat_screen.dart';
 // ignore: import_of_legacy_library_into_null_safe
-import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 // ignore: use_key_in_widget_constructors
-class RegistrationScreen extends StatefulWidget {
+class RegistrationScreen extends ConsumerWidget {
   static const String id = 'registration_Screen';
 
   @override
-  _RegistrationScreenState createState() => _RegistrationScreenState();
-}
-
-class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _auth = FirebaseAuth.instance;
-  bool showSpinner = false;
-  late String email;
-  late String password;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref.watch(authProvider);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
+      body: ProgressLoader(
+        loading: model.loading,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
@@ -50,9 +42,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               TextField(
                 keyboardType: TextInputType.emailAddress,
                 textAlign: TextAlign.center,
-                onChanged: (value) {
-                  email = value;
-                },
+                onChanged: (v) => model.email = v,
                 decoration:
                     kTextFieldDecoration.copyWith(hintText: 'Enter your Email'),
               ),
@@ -62,9 +52,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               TextField(
                 obscureText: true,
                 textAlign: TextAlign.center,
-                onChanged: (value) {
-                  password = value;
-                },
+                onChanged: (v) => model.password = v,
                 decoration: kTextFieldDecoration.copyWith(
                     hintText: 'Enter your Password'),
               ),
@@ -75,23 +63,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 colour: Colors.blueAccent,
                 title: 'Register',
                 onPressed: () async {
-                  setState(() {
-                    showSpinner = true;
+                  model.register(onDone: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, ChatScreen.id, (route) => false);
                   });
-                  try {
-                    final newUser = await _auth.createUserWithEmailAndPassword(
-                        email: email, password: password);
-                    // ignore: unnecessary_null_comparison
-                    if (newUser != null) {
-                      Navigator.pushNamed(context, ChatScreen.id);
-                    }
-                    setState(() {
-                      showSpinner = false;
-                    });
-                  } catch (e) {
-                    // ignore: avoid_print
-                    print(e);
-                  }
                 },
               ),
             ],

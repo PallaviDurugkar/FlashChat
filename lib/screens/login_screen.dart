@@ -1,33 +1,30 @@
 // ignore_for_file: prefer_const_constructors
+import 'package:flash_chat/components/progress_loader.dart';
 import 'package:flash_chat/screens/chat_screen.dart';
+import 'package:flash_chat/screens/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:firebase_auth/firebase_auth.dart';
-// ignore: import_of_legacy_library_into_null_safe
-import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 // ignore: use_key_in_widget_constructors
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerWidget {
   static const String id = 'login_screen';
 
-  @override
-  _LoginScreenState createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
   final _auth = FirebaseAuth.instance;
   bool showSpinner = false;
   late String email;
   late String password;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref.watch(authProvider);
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 243, 237, 237),
-      body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
+      body: ProgressLoader(
+        loading: showSpinner,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
@@ -50,9 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 keyboardType: TextInputType.emailAddress,
                 textAlign: TextAlign.center,
-                onChanged: (value) {
-                  email = value;
-                },
+                onChanged: (value) => model.email = value,
                 decoration:
                     kTextFieldDecoration.copyWith(hintText: 'Enter your Email'),
               ),
@@ -62,9 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 obscureText: true,
                 textAlign: TextAlign.center,
-                onChanged: (value) {
-                  password = value;
-                },
+                onChanged: (v) => model.password = v,
                 decoration: kTextFieldDecoration.copyWith(
                     hintText: 'Enter your Password'),
               ),
@@ -75,23 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 colour: Colors.lightBlueAccent,
                 title: 'Log in',
                 onPressed: () async {
-                  setState(() {
-                    showSpinner = true;
+                  model.login(onDone: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, ChatScreen.id, (route) => false);
                   });
-                  try {
-                    final user = await _auth.signInWithEmailAndPassword(
-                        email: email, password: password);
-                    // ignore: unnecessary_null_comparison
-                    if (user != null) {
-                      Navigator.pushNamed(context, ChatScreen.id);
-                    }
-                    setState(() {
-                      showSpinner = false;
-                    });
-                  } catch (e) {
-                    // ignore: avoid_print
-                    print(e);
-                  }
                 },
               ),
             ],
