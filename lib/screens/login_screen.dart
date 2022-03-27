@@ -13,10 +13,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 class LoginScreen extends ConsumerWidget {
   static const String id = 'login_screen';
 
-  final _auth = FirebaseAuth.instance;
-  bool showSpinner = false;
-  late String email;
-  late String password;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,7 +20,7 @@ class LoginScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 243, 237, 237),
       body: ProgressLoader(
-        loading: showSpinner,
+        loading: model.loading,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
